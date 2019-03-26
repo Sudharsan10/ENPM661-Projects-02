@@ -23,6 +23,7 @@ class Nodes:
         self.parent = parent_index
         self.heuristic_distance = ((current_index[0] - goal_index[0])**2 + (current_index[1] - goal_index[1])**2 )**.5
         self.cost = cost
+        self.h_cost = float('inf')
 
 class Pathfinder:
     def __init__(self, start: tuple, goal: tuple, resolution: tuple, bot_radius = 0, clearance = 0):
@@ -50,7 +51,7 @@ class Pathfinder:
         # self.dijkstra(start, goal)
 
         # ------> Running Astar <------- #
-        self.Astar(start, goal)
+        # self.Astar(start, goal)
 
     # ================================================================================================================================================================= #
     # -----> Function to generate Nodes <----- #
@@ -178,25 +179,14 @@ class Pathfinder:
         inv_node = node[1],node[0]
         inv_parent = parent[1],parent[0]
 
-        # -----> Cost calculation for A* Algorithm <----- #
-        if flag:
-            heuristic_distance = self.nodes[inv_node].heuristic_distance
-            initial_cost = self.nodes[inv_parent].cost
-            node_cost = self.nodes[inv_node].cost
-            if node_cost > heuristic_distance + initial_cost + step_cost:
-                self.nodes[inv_node].cost = heuristic_distance + initial_cost + step_cost
-                self.nodes[inv_node].parent = parent
-            return self.nodes[inv_node]
-
-        # -----> Cost calculation for Dijkstra Algorithm <----- #
-        else:  
-            initial_cost = self.nodes[inv_parent].cost
-            node_cost = self.nodes[inv_node].cost
-            if node_cost > initial_cost + step_cost:
-                self.nodes[inv_node].cost = initial_cost + step_cost
-                self.nodes[inv_node].parent = parent
-            
-            return self.nodes[inv_node]
+        initial_cost = self.nodes[inv_parent].cost
+        node_cost = self.nodes[inv_node].cost
+        if node_cost > initial_cost + step_cost:
+            self.nodes[inv_node].cost = initial_cost + step_cost
+            self.nodes[inv_node].parent = parent
+            # -----> Cost calculation for Dijkstra Algorithm <----- #        
+            if flag: self.nodes[inv_node].h_cost = self.nodes[inv_node].heuristic_distance + initial_cost + step_cost        
+        return self.nodes[inv_node]
 
     # ================================================================================================================================================================= #
     # -----> Dijkstra Algorithm Function <----- #
@@ -250,7 +240,7 @@ class Pathfinder:
         
         self.unvisited.append(self.nodes[start_index[1]][start_index[0]])
         while self.unvisited:
-            current_node = min(self.unvisited, key=lambda x: x.heuristic_distance)
+            current_node = min(self.unvisited, key=lambda x: x.h_cost)
             self.find_neighbours(current_node.index, 1)
             self.visited.add(current_node.index)
             graph[current_node.index[1]][current_node.index[0]] = [0, 225, 225]
@@ -293,7 +283,7 @@ if __name__ == '__main__':
     # resolution = tuple([int(i) for i in input("Enter the Grid Size of the Graph (e.g, width and height  as 'width Height' seperated by space without quotes):").split()])
     # bot_radius = int(input("Enter the bot radius:"))
     # clearance = int(input("Enter the clearance between robot and obstacles:"))
-    start = (10, 10)
+    start = (125, 70)
     goal = (230, 120)
     resolution = (250, 150)
     bot_radius = 5
