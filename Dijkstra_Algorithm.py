@@ -47,12 +47,6 @@ class Pathfinder:
         self.calc_obstacles(resolution)                                     # Calculating Obstacles
         self.minowski_sum(self.obstacle_nodes, self.robot_points, resolution[1], resolution[0])
 
-        # ------> Running Dijkstra <------- #
-        # self.dijkstra(start, goal)
-
-        # ------> Running Astar <------- #
-        # self.Astar(start, goal)
-
     # ================================================================================================================================================================= #
     # -----> Function to generate Nodes <----- #
     # ================================================================================================================================================================= #
@@ -195,14 +189,15 @@ class Pathfinder:
         self.visited = set()                                                # Reset Visited Nodes
         self.unvisited = list()                                             # Reset Unvisited        
         graph = np.zeros((self.resolution[1], self.resolution[0], 3))       # GUI to vizualize the exploration  
-        
+        cv.namedWindow("Dijkstra Algorithm", cv.WINDOW_NORMAL)
+        cv.resizeWindow("Dijkstra Algorithm", 1000, 600)
         self.unvisited.append(self.nodes[start_index[1]][start_index[0]])
         while self.unvisited:
             current_node = min(self.unvisited, key = lambda x: x.cost)
             self.find_neighbours(current_node.index)
             self.visited.add(current_node.index)
             graph[current_node.index[1]][current_node.index[0]] = [255, 225, 0]
-            cv.imshow(" Dijkstra Algorithm", graph)
+            cv.imshow("Dijkstra Algorithm", graph)
             cv.waitKey(1)
             self.unvisited.remove(current_node)
 
@@ -214,19 +209,19 @@ class Pathfinder:
             self.shortest_path.insert(0, x)
             x = self.nodes[y].parent
             cv.line(graph, (y[1],y[0]), x, (0, 0, 255), 1)
-            cv.imshow(" Dijkstra Algorithm",graph)
-            cv.waitKey(1)
+            # cv.imshow("Dijkstra Algorithm",graph)
+            # cv.waitKey(1)
             if x == start_index:
                 self.shortest_path.insert(0, x)
                 cv.line(graph, (y[1], y[0]), x, (0, 0, 255), 1)
-                cv.imshow(" Dijkstra Algorithm", graph)
-                cv.waitKey(1)
+                # cv.imshow("Dijkstra Algorithm", graph)
+                # cv.waitKey(1)
                 break
             y = (x[1], x[0])
 
         cv.circle(graph, start_index, 1, [255, 0, 255], -1)
         cv.circle(graph, goal_index, 1, [255, 0, 255], -1)
-        cv.imshow(" Dijkstra Algorithm", graph)
+        cv.imshow("Dijkstra Algorithm", graph)
         cv.waitKey(0)
         print("cost in Dijkstra: ", self.nodes[(goal_index[1], goal_index[0])].cost)
 
@@ -237,15 +232,16 @@ class Pathfinder:
         self.visited = set()                                                # Reset Visited Nodes
         self.unvisited = list()                                             # Reset Unvisited        
         graph = np.zeros((self.resolution[1], self.resolution[0], 3))       # GUI to vizualize the exploration  
-        
+        cv.namedWindow("A* Algorithm", cv.WINDOW_NORMAL)
+        cv.resizeWindow("A* Algorithm", 1000, 600)
         self.unvisited.append(self.nodes[start_index[1]][start_index[0]])
         while self.unvisited:
             current_node = min(self.unvisited, key=lambda x: x.h_cost)
             self.find_neighbours(current_node.index, 1)
             self.visited.add(current_node.index)
-            graph[current_node.index[1]][current_node.index[0]] = [0, 225, 225]
-            cv.imshow(" A* Algorithm", graph)
-            cv.waitKey(1)            
+            graph[current_node.index[1]][current_node.index[0]] = [0, 225, 225]            
+            # cv.imshow("A* Algorithm", graph)
+            # cv.waitKey(1)            
             self.unvisited.remove(current_node)
             if goal_index in self.visited: break
         
@@ -256,19 +252,19 @@ class Pathfinder:
             self.shortest_path.insert(0, x)
             x = self.nodes[y].parent
             cv.line(graph, (y[1], y[0]), x, (0, 0, 255), 1)
-            cv.imshow(" A* Algorithm", graph)
-            cv.waitKey(1)
+            # cv.imshow("A* Algorithm", graph)
+            # cv.waitKey(1)
             if x == start_index:
                 self.shortest_path.insert(0, x)
                 cv.line(graph, (y[1], y[0]), x, (0, 0, 255), 1)
-                cv.imshow(" A* Algorithm", graph)
-                cv.waitKey(1)
+                # cv.imshow("A* Algorithm", graph)
+                # cv.waitKey(1)
                 break
             y = (x[1], x[0])
 
         cv.circle(graph, start_index, 1, [255, 0, 255], -1)
         cv.circle(graph, goal_index, 1, [255, 0, 255], -1)
-        cv.imshow(" A* Algorithm", graph)
+        cv.imshow("A* Algorithm", graph)
         cv.waitKey(0)
 
         print("cost in Astar: ", self.nodes[(goal_index[1], goal_index[0])].cost)
@@ -283,12 +279,18 @@ if __name__ == '__main__':
     # resolution = tuple([int(i) for i in input("Enter the Grid Size of the Graph (e.g, width and height  as 'width Height' seperated by space without quotes):").split()])
     # bot_radius = int(input("Enter the bot radius:"))
     # clearance = int(input("Enter the clearance between robot and obstacles:"))
-    start = (125, 70)
-    goal = (230, 120)
+    start = (239, 139)
+    goal = (160, 20)
     resolution = (250, 150)
     bot_radius = 5
     clearance = 0
 
     map1 = Pathfinder(start, goal, resolution, bot_radius, clearance)
+    
+    map1.dijkstra(start, goal)
+    # ------> Running Astar <------- #
+    map1.Astar(start, goal)
+    # ------> Running Dijkstra <------- #
+
     
     cv.destroyAllWindows()
