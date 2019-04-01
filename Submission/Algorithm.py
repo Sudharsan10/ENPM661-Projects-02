@@ -405,7 +405,6 @@ if __name__ == '__main__':
     maps.Astar(start, goal)                                                 # Runs the Astar Algorithm and GUI to show the exploration
     maps.print_shortest_path(1)                                             # Prints the shortest file path found using Astar Algo
     maps.print_explored_nodes(1)                                            # Prints all the explored nodes using Astar Algo
-    
     # ------> Running Dijkstra <------- #
     maps.dijkstra(start, goal)                                              # Runs the Dijkstra Algorithm and GUI to show the exploration
     maps.print_shortest_path(0)                                             # Prints the shortest file path found using Dijkstra Algo
