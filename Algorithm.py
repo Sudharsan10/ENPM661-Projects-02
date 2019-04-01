@@ -48,18 +48,13 @@ class Pathfinder:
         self.nodes = self.generate_nodes(self.grid_size, start, goal)       # Generating nodes for the given layout
         
         # ------> Environment Setup <------- #
-        self.start_point_check = False
-        self.goal_point_check = False
-        self.nodes_Astar = []
-        self.nodes_Dijkstra = []
-        self.temp = []
+        self.nodes_Astar = []                                               # Nodes Explored using Astar Algorithm
+        self.nodes_Dijkstra = []                                            # Nodes Explored using Dijkstra Algorithm
+        self.temp = []                                                      
         self.calc_robot_points(self.clearance)                              # Calculating Robot occupied point cloud at origin
         self.calc_obstacles(grid_size)                                      # Calculating Obstacles
         self.minowski_sum(self.obstacle_nodes, self.robot_points, grid_size[0], grid_size[1])
-
-        if goal in self.net_obstacles_nodes: self.goal_point_check = True
-        if start in self.net_obstacles_nodes: self.start_point_check = True
-
+        
     # ================================================================================================================================================================= #
     # -----> Function to generate Nodes <----- #
     # ================================================================================================================================================================= #
@@ -84,12 +79,18 @@ class Pathfinder:
     # ================================================================================================================================================================= #
     # -----> Function to Populate Obstacles in the GUI <----- #
     # ================================================================================================================================================================= #
-    def populate_obstacles(self)-> None:
-        
+    def point_check(self, node: tuple)-> bool:
+        if node in self.net_obstacles_nodes: return True
+        elif 0<= node[0] < self.grid_size[0] and 0<= node[1] < self.grid_size[1]: return False
+        else: return True
+    # ================================================================================================================================================================= #
+    # -----> Function to Populate Obstacles in the GUI <----- #
+    # ================================================================================================================================================================= #
+    def populate_obstacles(self)-> None:        
         for node in self.net_obstacles_nodes:
             if node in self.obstacle_nodes: self.graph[node] = [255, 0, 0]
             else: self.graph[node] = [255, 255, 255]
-
+                
     # ================================================================================================================================================================= #
     # -----> Function to perform rectangle check <----- #
     # ================================================================================================================================================================= #
@@ -137,7 +138,7 @@ class Pathfinder:
             for j in robot_points:
                 node = (y - (-1)*j[1], x - (-1)*j[0])
                 if 0 <= node[1] <= w-1 and 0 <= node[0] <= h-1:
-                    self.net_obstacles_nodes.add(node)
+                    self.net_obstacles_nodes.add(node) 
         
     # ================================================================================================================================================================= #
     # -----> Function to Explore the neighbours <----- #
@@ -229,7 +230,7 @@ class Pathfinder:
     # ================================================================================================================================================================= #
     # -----> Function to generate Shortest node path <----- #
     # ================================================================================================================================================================= #
-    def print_explored_nodes(self, flag: int) -> None:
+    def print_explored_nodes(self, flag: int) -> None:        
         if flag:
             nodes = [[str(j) for j in i] for i in self.nodes_Astar]
             nodes = [' '.join(i)+'\n' for i in nodes]
@@ -246,8 +247,7 @@ class Pathfinder:
     # ================================================================================================================================================================= #
     # -----> Function to generate Shortest node path <----- #
     # ================================================================================================================================================================= #
-    def print_shortest_path(self, flag: int)-> None:
-        
+    def print_shortest_path(self, flag: int)-> None:        
         if flag:
             short_path = [[str(j) for j in i] for i in self.shortest_path_Astar]
             short_path = [' '.join(i)+'\n' for i in short_path]
@@ -276,36 +276,44 @@ class Pathfinder:
 
         self.unvisited.append(self.nodes[start_index])                      # Initialising the node to explore with start node
 
-        while self.unvisited:
-            current_node = min(self.unvisited, key = lambda x: x.cost)
-            self.find_neighbours(current_node.index)
-            self.visited.add(current_node.index)
-            self.graph[current_node.index] = [255, 225, 0]
-            self.unvisited.remove(current_node)
-
-            # -----> To Skip to the result comment below lines <----- #
-            cv.imshow("Dijkstra Algorithm", self.graph)
-            cv.waitKey(1)
-
-        # -----> Extracting the shortest path <----- #
-        y = (goal_index[1], goal_index[0])
-        x = goal_index
-        z = (x[1], 150 - x[0])
-        while True:
-            self.shortest_path_Dijkstra.insert(0, z)
-            x = self.nodes[x].parent
-            cv.line(self.graph, (x[1],x[0]), y, (0, 0, 255), 1)
-            if x == start_index:
-                z = (x[1], 150 - x[0])
-                self.shortest_path_Dijkstra.insert(0, z)
-                cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
-                break
-            y = (x[1], x[0])
-            z = (x[1], 150 - x[0])
-
-        self.nodes_Dijkstra = [(x[1],150 - x[0]) for x in list(self.visited) + self.temp]
         cv.circle(self.graph, (start_index[1], start_index[0]), 1, [255, 0, 255], -1)
-        cv.circle(self.graph, (goal_index[1], goal_index[0]), 1, [255, 0, 255], -1)
+        cv.circle(self.graph, (goal_index[1], goal_index[0]), 1, [0, 255, 0], -1)
+
+        if self.goal not in self.net_obstacles_nodes and self.start not in self.net_obstacles_nodes:
+            while self.unvisited:
+                current_node = min(self.unvisited, key = lambda x: x.cost)
+                self.find_neighbours(current_node.index)
+                self.visited.add(current_node.index)
+                self.graph[current_node.index] = [255, 225, 0]
+                self.unvisited.remove(current_node)
+
+                # -----> To Skip to the result comment below lines <----- #
+                cv.imshow("Dijkstra Algorithm", self.graph)
+                cv.waitKey(1)
+
+            # -----> Extracting the shortest path <----- #
+            y = (goal_index[1], goal_index[0])
+            x = goal_index
+            z = (x[1] + 1, 150 - x[0] + 1)
+            while True:
+                self.shortest_path_Dijkstra.insert(0, z)
+                x = self.nodes[x].parent
+                cv.line(self.graph, (x[1],x[0]), y, (0, 0, 255), 1)
+                if x == start_index:
+                    z = (x[1]+1, 150 - x[0]+1)
+                    self.shortest_path_Dijkstra.insert(0, z)
+                    cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
+                    break
+                y = (x[1], x[0])
+                z = (x[1] + 1, 150 - x[0] + 1)
+                
+            self.nodes_Dijkstra = [(x[1] + 1,150 - x[0]) for x in list(self.visited) + self.temp]
+
+        else:
+            print("The Goal node is in obstacle or out of bound: ", self.point_check(self.goal), "\nThe start Node inside Obstacle or out of bound: ", self.point_check(self.start))
+
+        cv.circle(self.graph, (start_index[1], start_index[0]), 1, [255, 0, 255], -1)
+        cv.circle(self.graph, (goal_index[1],  goal_index[0]), 1, [0, 255, 0], -1)
         cv.imshow("Dijkstra Algorithm", self.graph)
         cv.waitKey(0)
         print("cost in Dijkstra: ", self.nodes[goal_index].cost)
@@ -325,37 +333,46 @@ class Pathfinder:
 
         self.unvisited.append(self.nodes[start_index])                      # Initialising the node to explore with start node
         
-        while self.unvisited:
-            current_node = min(self.unvisited, key=lambda x: x.h_cost)
-            self.find_neighbours(current_node.index, 1)
-            self.visited.add(current_node.index)
-            self.graph[current_node.index] = [0, 225, 225]  
-            self.unvisited.remove(current_node)
-            if goal_index in self.visited: break
-
-            # -----> To Skip to the result comment below lines <----- #         
-            cv.imshow("A* Algorithm", self.graph)
-            cv.waitKey(1)                      
-        
-        # -----> Extracting the shortest path <----- #
-        y = (goal_index[1], goal_index[0])
-        x = goal_index
-        z = (x[1], 150 - x[0])
-        while True:
-            self.shortest_path_Astar.insert(0, z)
-            x = self.nodes[x].parent
-            cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
-            if x == start_index:
-                z = (x[1], 150 - x[0])
-                self.shortest_path_Astar.insert(0, z)
-                cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
-                break
-            y = (x[1], x[0])
-            z = (x[1], 150 - x[0])
-
-        self.nodes_Astar = [(x[1],150 - x[0]) for x in list(self.visited) + self.temp]
         cv.circle(self.graph, (start_index[1], start_index[0]), 1, [255, 0, 255], -1)
-        cv.circle(self.graph, (goal_index[1], goal_index[0]), 1, [255, 0, 255], -1)
+        cv.circle(self.graph, (goal_index[1], goal_index[0]), 1, [0, 255, 0], -1)
+
+        if self.goal not in self.net_obstacles_nodes and self.start not in self.net_obstacles_nodes: 
+            while self.unvisited:
+                current_node = min(self.unvisited, key=lambda x: x.h_cost)
+                self.find_neighbours(current_node.index, 1)
+                self.visited.add(current_node.index)
+                self.graph[current_node.index] = [0, 225, 225]  
+                self.unvisited.remove(current_node)
+                if goal_index in self.visited: break
+
+                # -----> To Skip to the result comment below lines <----- #         
+                cv.imshow("A* Algorithm", self.graph)
+                cv.waitKey(1)                      
+            
+            # -----> Extracting the shortest path <----- #
+            y = (goal_index[1], goal_index[0])
+            x = goal_index
+            z = (x[1] + 1, 150 - x[0])
+            while True:
+                self.shortest_path_Astar.insert(0, z)
+                x = self.nodes[x].parent
+                cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
+                if x == start_index:
+                    z = (x[1] + 1, 150 - x[0])
+                    self.shortest_path_Astar.insert(0, z)
+                    cv.line(self.graph, (x[1], x[0]), y, (0, 0, 255), 1)
+                    break
+                y = (x[1], x[0])
+                z = (x[1] + 1, 150 - x[0])
+            
+            self.nodes_Astar = [(x[1] + 1,150 - x[0]) for x in list(self.visited) + self.temp]
+        
+        else:
+            print("The Goal node in obstacle or out of bound: ", self.point_check(self.goal), "\nThe start Node inside Obstacle or out of bound: ", self.point_check(self.start))
+        
+        cv.circle(self.graph, (start_index[1], start_index[0]), 1, [255, 0, 255], -1)
+        cv.circle(self.graph, (goal_index[1], goal_index[0]), 1, [0, 255, 0], -1)
+
         cv.imshow("A* Algorithm", self.graph)
         cv.waitKey(0)
 
@@ -366,34 +383,32 @@ if __name__ == '__main__':
     # =================================================================================================================================================================== #
     # User Input Section
     # =================================================================================================================================================================== #
-    # start = tuple([int(i) for i in input("Enter the Start node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
-    # goal = tuple([int(i) for i in input("Enter the Goal node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
-    # grid_size = tuple([int(i) for i in input("Enter the Grid Size of the Graph (e.g, width and height  as 'width Height' seperated by space without quotes):").split()])
-    # bot_radius = int(input("Enter the bot radius:"))
-    # clearance = int(input("Enter the clearance between robot and obstacles:"))
-    start = (70, 100)
-    goal = (50, 50)
-    grid_size = (250, 150)
-    bot_radius = 5
-    clearance = 0
-    resolution = 1
+    start = tuple([int(i) for i in input("Enter the Start node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
+    goal = tuple([int(i) for i in input("Enter the Goal node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
+    grid_size = tuple([int(i) for i in input("Enter the Grid Size of the Graph (e.g, width and height  as 'width Height' seperated by space without quotes):").split()])
+    bot_radius = int(input("Enter the bot radius:"))
+    clearance = int(input("Enter the clearance between robot and obstacles:"))
+    # start = (230, 20)
+    # goal = (100, 20)
+    # grid_size = (250, 150)
+    # bot_radius = 5
+    # clearance = 0
+    resolution = 1                                                          # To change resolution change the value here
 
-    start = (int(resolution*(150 - start[1])),int(resolution*(start[0]))) 
-    goal = (int(resolution*(150 - goal[1])),int(resolution*(goal[0]))) 
+    start = (int(resolution*(150 - start[1])),int(resolution*(start[0]))-1) 
+    goal = (int(resolution*(150 - goal[1])),int(resolution*(goal[0]))-1) 
     grid_size = (int(resolution*grid_size[1]),int(resolution*grid_size[0]))
-
+    
     maps = Pathfinder(start, goal, grid_size, bot_radius, clearance, resolution)
     
-    if not maps.start_point_check and not maps.goal_point_check:
-        # ------> Running Astar <------- #
-        maps.Astar(start, goal)                                             # Runs the Astar Algorithm and GUI to show the exploration
-        maps.print_shortest_path(1)                                         # Prints the shortest file path found using Astar Algo
-        maps.print_explored_nodes(1)                                        # Prints all the explored nodes using Astar Algo
-        # ------> Running Dijkstra <------- #
-        maps.dijkstra(start, goal)                                          # Runs the Dijkstra Algorithm and GUI to show the exploration
-        maps.print_shortest_path(0)                                         # Prints the shortest file path found using Dijkstra Algo
-        maps.print_explored_nodes(0)                                        # Prints all the explored nodes using Dijkstra Algo
-    else:
-        print("The Goal node: ", maps.goal_point_check, "\nThe start Node: ", maps.start_point_check)
+    # ------> Running Astar <------- #
+    maps.Astar(start, goal)                                                 # Runs the Astar Algorithm and GUI to show the exploration
+    maps.print_shortest_path(1)                                             # Prints the shortest file path found using Astar Algo
+    maps.print_explored_nodes(1)                                            # Prints all the explored nodes using Astar Algo
+    # ------> Running Dijkstra <------- #
+    maps.dijkstra(start, goal)                                              # Runs the Dijkstra Algorithm and GUI to show the exploration
+    maps.print_shortest_path(0)                                             # Prints the shortest file path found using Dijkstra Algo
+    maps.print_explored_nodes(0)                                            # Prints all the explored nodes using Dijkstra Algo
+    
 
     cv.destroyAllWindows()
