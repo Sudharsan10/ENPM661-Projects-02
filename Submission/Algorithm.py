@@ -383,11 +383,11 @@ if __name__ == '__main__':
     # =================================================================================================================================================================== #
     # User Input Section
     # =================================================================================================================================================================== #
-    start = tuple([int(i) for i in input("Enter the Start node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
-    goal = tuple([int(i) for i in input("Enter the Goal node (e.g,(x,y) as 'x y' seperated by space without quotes:").split()])
+    start = tuple([int(i) for i in input("Enter the Start node (e.g,(x,y):(1,2) as 'x y': '1 2' - seperated by space without quotes:").split()])
+    goal = tuple([int(i) for i in input("Enter the Goal node (e.g,(x,y):(1,2) as 'x y': '1 2' - seperated by space without quotes:").split()])
     grid_size = tuple([int(i) for i in input("Enter the Grid Size of the Graph (e.g, width and height  as 'width Height' seperated by space without quotes):").split()])
     bot_radius = int(input("Enter the bot radius:"))
-    clearance = int(input("Enter the clearance between robot and obstacles:"))
+    clearance = int(input("Enter the clearance needed between robot and obstacles:"))
     # start = (230, 20)
     # goal = (100, 20)
     # grid_size = (250, 150)
@@ -405,7 +405,7 @@ if __name__ == '__main__':
     maps.Astar(start, goal)                                                 # Runs the Astar Algorithm and GUI to show the exploration
     maps.print_shortest_path(1)                                             # Prints the shortest file path found using Astar Algo
     maps.print_explored_nodes(1)                                            # Prints all the explored nodes using Astar Algo
-    
+
     # ------> Running Dijkstra <------- #
     maps.dijkstra(start, goal)                                              # Runs the Dijkstra Algorithm and GUI to show the exploration
     maps.print_shortest_path(0)                                             # Prints the shortest file path found using Dijkstra Algo

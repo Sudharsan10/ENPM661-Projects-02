@@ -54,6 +54,10 @@ class Pathfinder:
         self.calc_robot_points(self.clearance)                              # Calculating Robot occupied point cloud at origin
         self.calc_obstacles(grid_size)                                      # Calculating Obstacles
         self.minowski_sum(self.obstacle_nodes, self.robot_points, grid_size[0], grid_size[1])
+        self.graph = np.zeros((self.grid_size[0], self.grid_size[1], 3))    # GUI to vizualize the exploration 
+        self.populate_obstacles()
+        cv.imshow("Obstacle space", self.graph)
+        cv.waitKey(0)
         
     # ================================================================================================================================================================= #
     # -----> Function to generate Nodes <----- #
